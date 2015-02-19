@@ -17,6 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* Check if WooCommerce is active */
 if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
 
+	//CHECK IF ADMIN SECTION AND LOAD ADMIN FUNCTIONS.
+	if( is_admin() ) {
+		require( plugin_dir_path( __FILE__ ) . 'admin/woocommerce-wholesale-pricing-admin.php' );
+	}
+	//CHECK IF ADMIN SECTION AND LOAD ADMIN FUNCTIONS.
+	
 	//CHECK IF SHOW ADMIN OPTION IS CHECKED AND ASSIGN CURRENT WHOLESALE ROLE
 	$wholesale_assigned_role = get_option('wwo_wholesale_role');
 	$admin_can_see_wholesale = get_option('wwo_admin_can_see_wholesale');	
@@ -27,12 +33,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	}	
 	//CHECK IF SHOW ADMIN OPTION IS CHECKED AND ASSIGN CURRENT WHOLESALE ROLE
 
-	//CHECK IF ADMIN USER AND LOAD ADMIN FUNCTIONS.
-	if( is_admin() ) {
-		require( plugin_dir_path( __FILE__ ) . 'admin/woocommerce-wholesale-pricing-admin.php' );
-	}
-	//CHECK IF ADMIN USER AND LOAD ADMIN FUNCTIONS.
-
 	//REGISTER STYLE SCRIPT
 	add_action('wp_enqueue_scripts','register_wholesale_scripts', 9);
 
@@ -41,6 +41,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	}
 	//REGISTER STYLE SCRIPT
 
+	/*  START FRONT END DISPLAY FUNCTIONS */
+	
 	//OVERRIDE STANDARD TAX CLASS WITH ASSIGNED WHOLESALE USER ROLE TAX CLASS//				
 	add_filter( 'woocommerce_product_tax_class', 'woo_diff_rate_for_user_role', 1, 2 );
 
@@ -56,7 +58,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				}
 			}
 		return $tax_class;			
-	}  //function woo_diff_rate_for_user_role( $tax_class, $product ) {	
+	}
 	//OVERRIDE STANDARD TAX CLASS WITH ASSIGNED WHOLESALE USER ROLE TAX CLASS//				
 	
 	//DISPLAY CUSTOM INFO BOX MESSAGE BEFORE AND AFTER CONTENT//
@@ -69,7 +71,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					echo '<div class="alert-box notice"><span>Notice:  </span>'.get_option( 'wwo_wholesale_role_message_label' ).'</div><br />';
 				}
 			}
-	}  //function woo_display_user_role_content_message() {		
+	}
 	//DISPLAY CUSTOM INFO BOX MESSAGE BEFORE AND AFTER CONTENT//
 
 	//DISPLAY CUSTOM INFO BOX MESSAGE AFTER CHECKOUT CONTENT//
@@ -80,16 +82,29 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			if( woo_check_user_role( $wholesale_assigned_role ) || woo_check_user_role( $admin_assigned_role )) {
 				if(get_option( 'wwo_wholesale_role_message_checkout' ) == 1) {
 					echo '<div class="alert-box notice"><span>Notice:  </span>'.get_option( 'wwo_wholesale_role_message_checkout_label' ).'</div><br />';
-				}  //if(get_option( 'wwo_wholesale_role_message_checkout' ) == '1') {
-			}  //if( woo_check_user_role( $wholesale_current_role )) {
-	}  //function woo_display_user_role_checkout_message() {		
+				}
+			}
+	}
 	//DISPLAY CUSTOM INFO BOX MESSAGE AFTER CHECKOUT CONTENT//
 
-	//GET THE MIN AND MAX VARIATION PRICE AND DISPLAY IT IF USER IS ROLE WHOLESALE_CUSTOMER//
-	add_filter('woocommerce_variable_price_html', 'woo_mix_max_variation_price_html', 10, 2);
-	add_filter('woocommerce_variable_sale_price_html', 'woo_mix_max_variation_price_html', 10, 2);
+	//DISPLAY CUSTOM INFO BOX MESSAGE AFTER CHECKOUT CONTENT//
+	add_filter('woocommerce_before_cart', 'woo_display_user_role_cart_message', 10, 2);
 	
-	function woo_mix_max_variation_price_html($price, $product) {	
+	function woo_display_user_role_cart_message() {		
+		global $admin_assigned_role, $wholesale_assigned_role;
+			if( woo_check_user_role( $wholesale_assigned_role ) || woo_check_user_role( $admin_assigned_role )) {
+				if(get_option( 'wwo_wholesale_role_message_cart' ) == 1) {
+					echo '<div class="alert-box notice"><span>Notice:  </span>'.get_option( 'wwo_wholesale_role_message_cart_label' ).'</div><br />';
+				}
+			}
+	}
+	//DISPLAY CUSTOM INFO BOX MESSAGE AFTER CHECKOUT CONTENT//
+		
+	//GET THE MIN AND MAX VARIATION PRICE AND DISPLAY IT IF USER IS ROLE WHOLESALE_CUSTOMER//
+	add_filter('woocommerce_variable_price_html', 'woo_min_max_variation_price_html', 10, 2);
+	add_filter('woocommerce_variable_sale_price_html', 'woo_min_max_variation_price_html', 10, 2);
+	
+	function woo_min_max_variation_price_html($price, $product) {	
 		global $admin_assigned_role, $wholesale_assigned_role;
 			if( woo_check_user_role( $wholesale_assigned_role ) || woo_check_user_role( $admin_assigned_role )) {
 				$wwo_percentage = get_option( 'wwo_percentage' );
@@ -125,7 +140,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 							if($format_price_max){
 								$savings  = $retail_max_price - $format_price_max;
 								$division = $savings / $retail_max_price;
-							}  //if($format_price_max){
+							}
 														
 							$res = $division * 100;
 							$res = round($res, 0);
@@ -159,20 +174,20 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 								} elseif($format_price_max != 0) {
 									$price = '<div class="wholesale wholesale_price">'.get_woocommerce_currency_symbol().$format_price_min.'-'.get_woocommerce_currency_symbol().$format_price_max.'</div>';
 								}									
-							}  //if ($wwo_rrp == '1' && $wwo_percentage == '1' && $wwo_savings == '1' ) {	
+							}
 						} elseif($format_price_max != 0) {  
 							if ($wwo_rrp == '1' ) {
 								$price .= '<div class="wholesale wholesale_price">'.get_option( 'wwo_wholesale_label' ).' From '.get_woocommerce_currency_symbol().$format_price_min.' to '.get_woocommerce_currency_symbol().$format_price_max.'</div>';							
 							} else {
 								$price = '<div class="wholesale wholesale_price">'.get_woocommerce_currency_symbol().$format_price_min.'-'.get_woocommerce_currency_symbol().$format_price_max.'</div>';
-							}  //if ($wwo_rrp == '1' ) {
-						}  //if(min_mod($variationP) == max_mod($variationP) && $format_price_max != 0) {
+							}
+						}
 				} else { 
 					return $price;
 				}
 			}
 		return $price;
-	}  //function custom_variation_price($price, $product) {
+	}
 	//GET THE MIN AND MAX VARIATION PRICE AND DISPLAY IT IF USER IS ROLE WHOLESALE_CUSTOMER//
 
 	//DISPLAY WHOLSALE PRICE SIMPLE PRODUCT IF USER IS ROLE WHOLESALE_CUSTOMER//
@@ -236,7 +251,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				} 
 			}
 		return $price;	
-	}  //function wwp_get_wholesale_price($price){
+	}
 	//DISPLAY WHOLSALE PRICE SIMPLE PRODUCT IF USER IS ROLE WHOLESALE_CUSTOMER//
 
 	//DISPLAY VARIATION PRICE BELOW SELECTED VARIATIONS//
@@ -300,9 +315,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				} 
 
 				return $price;
-			}  //if($roles == $current_role ){
+			}
 		return $price;
-	}  //function woo_wholesale_variation_price_html($price, $product) {  
+	}
 	//DISPLAY VARIATION PRICE BELOW SELECTED VARIATIONS//
 	
 	//DISPLAY VARIATION PRICE MATRIX ABOVE VARIATION SELECT OPTIONS//	
@@ -358,10 +373,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						}
 						echo "</table>";
 						echo "</div><br />";
-					}  //if($is_variable == "variable") {
-				}  //if(get_option( 'wwo_wholesale_price_matrix' ) == '1') {				
-			}  //if($roles == $current_role ){		
-	}  //function woo_display_variation_price_table() {	
+					}
+				}
+			}
+	}
 	//DISPLAY VARIATION PRICE MATRIX ABOVE VARIATION SELECT OPTIONS//	
 
 	//SHOW WHOLSALE PRICE IN CART//
@@ -395,7 +410,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				
 				if($variation_id > 0) {
 					$is_variable = 1;
-				}  //if($variation_id > 0) {		
+				}
 				//if not variable get simple wholesale price.
 				if($is_variable == 0) {
 					$simple_wholesale_price = get_post_meta( $values['product_id'], '_wholesale_price', true );		
@@ -412,10 +427,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					//variable wholesale product price
 					return woocommerce_price($variable_wholesale_price[0]);	
 				}  //if($simple_wholesale_price != '') {
-			}  //if($roles == $current_role ){		
+			}
 		//retail price
 		return $product_price;	
-	}  //function woo_mini_cart_prices( $product_price, $values, $cart_item) {
+	}
 	//UPDATE MINI CART ON PAGE RELOAD WITH WHOLESALE PRICE//
 		
 	// UPDATE ITEMS IN CART VIA AJAX
@@ -436,7 +451,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$fragments['a.cart-contents'] = ob_get_clean();
 				return $fragments;
 			}
-	}  //function woo_add_to_cart_ajax( $fragments ) 
+	}
 	// UPDATE ITEMS IN CART VIA AJAX
 		
 	//DISABLE USE OF COUPONS AT CHECKOUT FOR WHOLESALE USER
@@ -454,47 +469,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		return $enabled;	
 	}	
 	//DISABLE USE OF COUPONS AT CHECKOUT FOR WHOLESALE USER
-	
-/*
-	//Note: removed as it was replace with pricing matrix, and it is not working with latest woocommerce update.
-	//DISPLAY VARIATION DROP DOWN SELECT BOX//
-	add_filter( 'woocommerce_variation_option_name', 'woo_display_price_in_variation_option_name' );
-
-	function woo_display_price_in_variation_option_name( $term ) {
-
-		global $wpdb, $product;
-		$result = $wpdb->get_col( "SELECT slug FROM {$wpdb->prefix}terms WHERE name = '$term'" );
-		$term_slug = ( !empty( $result ) ) ? $result[0] : $term;
-		$query = "SELECT postmeta.post_id AS product_id
-				  FROM {$wpdb->prefix}postmeta AS postmeta
-				  LEFT JOIN {$wpdb->prefix}posts AS products ON ( products.ID = postmeta.post_id )
-				  WHERE postmeta.meta_key LIKE 'attribute_%'
-				  AND postmeta.meta_value = '$term_slug'
-				  AND products.post_parent = $product->id";
-
-		$variation_id = $wpdb->get_col( $query );
-		$parent = wp_get_post_parent_id( $variation_id[0] );
-		if ( $parent > 0 ) {
-			$_product = new WC_Product_Variation( $variation_id[0] );		
-			$current_user = new WP_User(wp_get_current_user()->id);
-			$user_roles = $current_user->roles;
-			$current_role = get_option('wwo_wholesale_role');
-			foreach ($user_roles as $roles) {
-				if($roles == $current_role ){
-					if(get_post_meta( $_product->variation_id, '_wholesale_price', true ) != NULL) {
-						//return $term . ' ('. get_woocommerce_currency_symbol() . get_post_meta( $_product->variation_id, '_wholesale_price', true ) . ')';
-						return $term.' ('.woocommerce_price( $_product->get_price() ).')';
-						//return $term . ' ('. get_woocommerce_currency_symbol() . $term_slug . ')';
-					}
-					
-				}
-			}
-		}
-		return $term;
-		//return $term . ' ('. get_woocommerce_currency_symbol() . get_post_meta( $_product->variation_id, '_price', true ) . ')';
-	}  //function display_price_in_variation_option_name( $term ) {
-	//DISPLAY VARIATION DROP DOWN SELECT BOX//
-*/
 
 	//custom php min function to deal with possible NULL prices in variation.
 	function min_mod () { 
@@ -512,9 +486,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		} 
 	  } 
 	  return $min;   
-	}  //function min_mod () { 
+	} 
 	//custom php min function to deal with possible NULL prices in variation.
-	
+		
 	//custom php max function to deal with possible NULL prices in variation.
 	function max_mod () { 
 	  $args = func_get_args(); 
@@ -531,23 +505,23 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		} 
 	  } 
 	  return $max;   
-	}  //function max_mod () { 
+	}
 	//custom php max function to deal with possible NULL prices in variation.
 
 	//custom funtion to check user role assignments.
 	function woo_check_user_role( $role, $user_id = null ) {
-	
+
 		if( is_numeric( $user_id ) ) {
 		} else {
 			$user = wp_get_current_user();
-		}  //if( is_numeric( $user_id ) ) {
-		
+		} 
+			
 		if ( empty( $user ) ) {
 			return false;
-		}  //if ( empty( $user ) ) {	
+		} 
 
 		return in_array( $role, (array) $user->roles );
-	}  //function woo_check_user_role( $role, $user_id = null ) {
+	}
 	//custom funtion to check user role assignments.
 	
 }  //if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
