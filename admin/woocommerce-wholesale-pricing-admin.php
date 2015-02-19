@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; 
 }  //if ( ! defined( 'ABSPATH' ) ) { 
 
-//CHECK IF ADMIN USER
+//CHECK IF ADMIN SECTION
 if( is_admin() ) {
 
 	//include quick edit code
@@ -22,6 +22,7 @@ if( is_admin() ) {
 	
 	//LOAD JS SCRIPT IN FOOTER//
 	add_action( 'admin_enqueue_scripts', 'wpp_admin_enqueue_scripts' );
+	
 	function wpp_admin_enqueue_scripts( $hook ) {
 
 		if ( 'edit.php' === $hook && isset( $_GET['post_type'] ) && 'product' === $_GET['post_type'] ) {
@@ -60,6 +61,8 @@ if( is_admin() ) {
 		register_setting( 'woo_wholesale_options', 'wwo_wholesale_role_message_label' );
 		register_setting( 'woo_wholesale_options', 'wwo_wholesale_role_message_checkout' );
 		register_setting( 'woo_wholesale_options', 'wwo_wholesale_role_message_checkout_label' );
+		register_setting( 'woo_wholesale_options', 'wwo_wholesale_role_message_cart' );
+		register_setting( 'woo_wholesale_options', 'wwo_wholesale_role_message_cart_label' );
 		register_setting( 'woo_wholesale_options', 'wwo_wholesale_price_matrix' );
 		register_setting( 'woo_wholesale_options', 'wwo_wholesale_disable_coupons' );
 	}
@@ -71,7 +74,8 @@ if( is_admin() ) {
 	add_option( 'wwo_wholesale_role', 'wholesale_customer', '', 'yes' );
 	add_option( 'wwo_woo_admin_role', 'administrator', '', 'yes' );		
 	add_option( 'wwo_wholesale_role_message_label', 'You are logged in as a wholesale customer and viewing wholesale prices.', '', 'yes' );
-	add_option( 'wwo_wholesale_role_message_checkout_label', 'You are logged in as a wholesale customer and will not be charged certain taxes.', '', 'yes' );
+	add_option( 'wwo_wholesale_role_message_checkout_label', 'You are logged in as a wholesale customer and viewing wholesale prices.', '', 'yes' );
+	add_option( 'wwo_wholesale_role_message_cart_label', 'You are logged in as a wholesale customer and viewing wholesale prices.', '', 'yes' );
 	
 	//ENSURE OPTION IS ALWAYS ADMIN FOR NOW
 	update_option( 'wwo_woo_admin_role', 'administrator' );
@@ -206,11 +210,18 @@ if( is_admin() ) {
 						<td></td>
 					</tr>  
 					<tr valign="top">      
+						<th scope="row">Show Wholesale User Role Cart Message:</th>
+						<td><input name="wwo_wholesale_role_message_cart" type="checkbox" value="1" <?php checked( '1', get_option( 'wwo_wholesale_role_message_cart' ) ); ?> />        
+						<code>Show wholesale user role cart message?</code><br />
+						<textarea rows="4" cols="50" name="wwo_wholesale_role_message_cart_label"><?php echo get_option( 'wwo_wholesale_role_message_cart_label' ); ?></textarea>
+						<br /><code>Message to display above cart. Default: "You are logged in as a wholesale customer and viewing wholesale prices."</code></td>
+					</tr> 	
+					<tr valign="top">      
 						<th scope="row">Show Wholesale User Role Checkout Message:</th>
 						<td><input name="wwo_wholesale_role_message_checkout" type="checkbox" value="1" <?php checked( '1', get_option( 'wwo_wholesale_role_message_checkout' ) ); ?> />        
 						<code>Show wholesale user role checkout message?</code><br />
 						<textarea rows="4" cols="50" name="wwo_wholesale_role_message_checkout_label"><?php echo get_option( 'wwo_wholesale_role_message_checkout_label' ); ?></textarea>
-						<br /><code>Message to display below checkout. Default: "You are logged in as a wholesale customer and will not be charged certain taxes."</code></td>
+						<br /><code>Message to display below checkout. Default: "You are logged in as a wholesale customer and viewing wholesale prices."</code></td>
 					</tr> 		
 					<tr valign="top">      
 						<th scope="row">Disable Wholesale Coupons:</th>
@@ -242,7 +253,7 @@ if( is_admin() ) {
 			</form>
 		</div>
 	<?php 
-	}  //function woo_wholesale_page_call() { 
+	}
 	//admin settings page display form
 
 	//SAVE SIMPLE WHOLSALE PRICE//
@@ -252,7 +263,7 @@ if( is_admin() ) {
 		$new_data = $_POST['wholesale_price'];
 		$post_ID = $_POST['post_ID'];
 		update_post_meta($post_ID, '_wholesale_price', $new_data) ;
-	}  //function wwp_save_simple_wholesale_price( $post_id ) {
+	}
 	//SAVE SIMPLE WHOLSALE PRICE//
 
 	//ADD WHOLESALE PRICE INPUT BOX TO ADMIN SIMPLE PRODUCTS	
@@ -272,7 +283,7 @@ if( is_admin() ) {
 			</td>
 		</tr>
 	<?php
-	}  //function wwp_add_admin_simple_wholesale_price( $loop ){ 
+	}
 	//ADD WHOLESALE PRICE INPUT BOX TO ADMIN SIMPLE PRODUCTS
 
 	//ADD WHOLESALE PRICE INPUT BOX TO ADMIN VARIABLE PRODUCTS
@@ -296,7 +307,7 @@ if( is_admin() ) {
 			</td>
 		</tr>
 	<?php
-	}  //function wwp_add_variable_wholesale_price( $loop, $variation_data ) {
+	}
 
 	function wwp_add_variable_wholesale_price_js() {
 	?>
@@ -309,7 +320,7 @@ if( is_admin() ) {
 			</td>
 		</tr>
 	<?php
-	}  //function wwp_add_variable_wholesale_price_js() {
+	}
 
 	function wwp_variable_wholesale_price_process( $post_id ) {
 		if(isset( $_POST['variable_sku'] ) ) :
@@ -328,7 +339,7 @@ if( is_admin() ) {
 			update_post_meta( $post_id, '_variation_prices', $wholesale_field );
 			update_post_meta( $post_id, '_wholesale_price', '' );
 		endif;
-	}  //function wwp_variable_wholesale_price_process( $post_id ) {
+	}
 	//ADD WHOLESALE PRICE INPUT BOX TO ADMIN VARIABLE PRODUCTS
 		
 	//INSERT POST TYPE WHOLESALE PRICE COLUMN
@@ -340,7 +351,7 @@ if( is_admin() ) {
 		array('wholesale' => 'Wholesale') +
 		array_slice($columns, $offset, NULL, true);
 		return $newArray;
-	}  //function wpp_add_wholesale_column( $columns ) {
+	}
 	//INSERT POST TYPE WHOLESALE PRICE COLUMN
 
 	//POPULATE ADMIN COLUMN WITH WHOLESALE PRICE
@@ -361,7 +372,7 @@ if( is_admin() ) {
 							if( empty( $value ) ){
 								unset( $variationP[$key] );
 							}
-						}  //foreach( $variationP as $key => $value ){
+						}
 						if(!empty($variationP)){
 							//format variable prices as min and max with two decimals eg.  11.00-99.00
 							$format_price_min = number_format(min($variationP), 2, '.', '');
@@ -370,22 +381,22 @@ if( is_admin() ) {
 								echo get_woocommerce_currency_symbol().$format_price_max;
 							} else {
 								echo get_woocommerce_currency_symbol().$format_price_min.'-'.get_woocommerce_currency_symbol().$format_price_max;
-							}  //if(min($variationP) == max($variationP))
+							}
 						} else { 
 							//must be empty variation product
 							echo __( '--' );
-						}  //if(!empty($variationP)){
+						} 
 					} else {
 						//must be empty simple product
 						echo __( '--' );
-					}  //if(is_array($variationP)) {
+					}
 				} else {
 					//echo out simple product price eg.  11.00
 					echo get_woocommerce_currency_symbol().$wholesale;
 				}
 			break;
 		}
-	}  //function wwp_manage_wholesale_product_columns( $column, $post_id ) {
+	}
 	//POPULATE ADMIN COLUMN WITH WHOLESALE PRICE
 
 	//MAKE ADMIN COLUMN SORTABLE
@@ -394,7 +405,7 @@ if( is_admin() ) {
 	function wpp_sortable_wholesale_column( $columns ) {
 		$columns['wholesale'] = 'wholesale';
 		return $columns;
-	}  //function wpp_sortable_wholesale_column( $columns ) {
+	}
 	//MAKE ADMIN COLUMN SORTABLE
 
 	add_filter( 'woocommerce_quantity_input_min', 'wpp_add_minimum_quantity' );
@@ -412,7 +423,7 @@ if( is_admin() ) {
 				}		
 			}
 		}
-	}  //function wpp_add_minimum_quantity($input_value) {
+	}
 
 	add_filter( 'woocommerce_quantity_input_max', 'wpp_add_maximum_quantity' );
 
@@ -429,6 +440,6 @@ if( is_admin() ) {
 				}		
 			}
 		}
-	}  //function wpp_add_maximum_quantity($input_value) {
+	}
 
 }  //if( is_admin() ) {
