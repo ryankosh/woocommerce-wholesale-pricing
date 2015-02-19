@@ -48,6 +48,7 @@ directory take precedence. For example, `/assets/screenshot-1.png` would win ove
 * Add option to show wholesale pricing to administrator.
 * Stream line wholesale user role check code.
 * Add option to disable coupon form for wholesale users.
+* Add cart message option.
 
 = 1.3 =
 * Streamline user role code.
@@ -59,12 +60,14 @@ directory take precedence. For example, `/assets/screenshot-1.png` would win ove
 * Add simple wholesale quick edit admin fuctions.
 * Add admin options to everything including all variations.
 * Tweak code.
+
 = 1.1 =
 * Break main file and admin code into seperate sections.
 * Add new options and styles.
 * Add variation price matrix to over come variation single variation price display.
 * Fix mini cart for variable wholesale prices.
 * Tweak code.
+
 = 1.0 =
 * First stabel release.
 
